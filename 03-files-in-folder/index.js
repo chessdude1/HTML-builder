@@ -11,7 +11,6 @@ function getFolderData(folderName) {
     files.forEach((file) => {
       fs.stat(folderName + "/" + file, (err, currentFile) => {
         if (currentFile.isDirectory()) {
-          getFolderData(folderName + "/" + file);
         } else {
           console.log(
             `${
