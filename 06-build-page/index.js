@@ -4,8 +4,9 @@ let readableStream = fs.createReadStream(
   "./06-build-page/template.html",
   "utf8"
 );
-console.log("~~~~~~~~~");
+
 selectiveDelete();
+
 fs.mkdir("./06-build-page/project-dist/", (err) => {
   if (err) console.log(err);
 });
@@ -42,114 +43,82 @@ fs.mkdir("./06-build-page/project-dist/styles", (err) => {
   if (err) console.log(err);
 });
 
-getIndexDataAfterMutation();
-function getIndexDataAfterMutation() {
-  readableStream.on("data", function (chunk) {
-    let data = "";
+let parsedTemplate = [];
+
+GetAllTextFromHTML();
+function GetAllTextFromHTML() {
+  readableStream.on("data", (chunk) => {
+    parsedTemplate = chunk
+      .split("{{")
+      .join("$")
+      .split(/[$ }}]/);
+
     chunk.split(/{{(.*?)}}/).forEach((elem) => {
       if (
         elem.split("").indexOf("<") === -1 &&
         elem.split("").indexOf(">") === -1 &&
         elem.split("").indexOf(" ") === -1
       ) {
-        // console.log(await replaceTags(elem));
-        replaceTags(elem);
-      } else {
-        fs.appendFile(
-          "./06-build-page/project-dist/index.html",
-          elem,
-          (err) => {
+        let nameOfFile = elem + ".html";
+        fs.readFile(
+          `./06-build-page/components/${nameOfFile}`,
+          "utf-8",
+          (err, data) => {
             if (err) {
               console.log(err);
-            } else {
-              console.log("done");
             }
+            objWithText[elem] = data;
           }
         );
-        // data += elem;
       }
     });
-    // appendFileToDirectory("./06-build-page/project-dist/index.html", data);
   });
 }
 
-function appendFileToDirectory(directory, content) {
-  fs.appendFile(directory, content, (err) => {
-    if (err) {
-      console.log(err);
-    }
+let objWithText = {
+  text: 1,
+};
+
+setTimeout(() => {
+  getIndexDataAfterMutation();
+}, 100);
+
+function getIndexDataAfterMutation() {
+  let readableStream = fs.createReadStream(
+    "./06-build-page/template.html",
+    "utf8"
+  );
+  readableStream.on("data", function (chunk) {
+    chunk.split(/{{(.*?)}}/).forEach((elem) => {
+      replaceTags(elem);
+    });
   });
 }
+
+// function appendFileToDirectory(directory, content) {
+//   fs.appendFile(directory, content, (err) => {
+//     if (err) {
+//       console.log(err);
+//     }
+//     console.log(content);
+//   });
+// }
 
 function replaceTags(elem) {
-  let nameOfFile = elem + ".html";
-  fs.readFile(
-    `./06-build-page/components/${nameOfFile}`,
-    "utf8",
-    (err, data) => {
-      if (err) console.log(err);
-      fs.appendFile("./06-build-page/project-dist/index.html", data, (err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log("done");
-        }
-      });
-    }
-  );
-  // fs.readFile(
-  //   `./06-build-page/components/${nameOfFile}`,
-  //   "utf8",
-  //   (err, Content) => {
-  //     test(Content);
-  //   }
-  // );
-  // console.log(a);
-  // return a;
+  if (elem in objWithText) {
+    parsedTemplate[parsedTemplate.indexOf(elem)] = objWithText[elem];
+    let currentData = parsedTemplate.join(" ");
+    fs.writeFile(
+      "./06-build-page/project-dist/index.html",
+      currentData,
+      "utf-8",
+      function (err) {
+        if (err) throw err;
+        console.log("filelistAsync complete");
+      }
+    );
+  }
 }
-
-// function deleteFromFolder(folderName) {
-//   fs.readdir(folderName, (err, files) => {
-//     if (err) {
-//       console.log(err);
-//     }
-//     files.forEach((file) => {
-//       fs.stat(path.join(folderName, file), (err, currentFile) => {
-//         if (currentFile.isDirectory()) {
-//           fs.rmdir(path.join(folderName, file), (err) => {
-//             if (err) console.log(err);
-//           });
-//         } else {
-//           fs.unlink(folderName + `/${file}`, (err) => {
-//             if (err) console.log(err);
-//           });
-//         }
-//       });
-//     });
-//   });
-// }
-
-// function deepDeleteFromFolder(folderName) {
-//   fs.readdir(folderName, (err, files) => {
-//     if (err) {
-//       console.log(err);
-//     }
-//     files.forEach((file) => {
-//       fs.stat(path.join(folderName, file), (err, currentFile) => {
-//         if (err) console.log(err);
-//         if (currentFile.isDirectory()) {
-//           console.log(path.join(folderName, file));
-//           console.log("~~");
-//           fs.rmdir(path.join(folderName, file), (err) => {
-//             if (err) {
-//               deepDeleteFromFolder(folderName);
-//             }
-//           });
-//         }
-//       });
-//     });
-//   });
-// }
 
 function selectiveDelete() {
   simpleDeleteFromDirectory("./06-build-page/project-dist/assets/fonts");
@@ -161,7 +130,6 @@ function selectiveDelete() {
 
 function simpleDeleteFromDirectory(directory) {
   fs.readdir(directory, (err, files) => {
-    console.log(files);
     files.forEach((file) => {
       fs.unlink(path.join(directory, file), (err) => {
         if (err) {
@@ -171,26 +139,6 @@ function simpleDeleteFromDirectory(directory) {
     });
   });
 }
-
-// function surfaceDeleteFromFolder(surfaceFolderName) {
-//   fs.readdir(surfaceFolderName, (err, files) => {
-//     if (err) {
-//       console.log(err);
-//     }
-//     files.forEach((file) => {
-//       fs.stat(path.join(surfaceFolderName, file), (err, currentFile) => {
-//         if (err) console.log(err);
-
-//         if (currentFile.isDirectory()) {
-//           surfaceDeleteFromFolder(path.join(surfaceFolderName, file));
-//         } else
-//           fs.unlink(path.join(surfaceFolderName, file), (err) => {
-//             if (err) console.log(err);
-//           });
-//       });
-//     });
-//   });
-// }
 
 const directoryOldFolderFonts = "./06-build-page/assets/fonts";
 const directoryNewFolderFonts = "./06-build-page/project-dist/assets/fonts";

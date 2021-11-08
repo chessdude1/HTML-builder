@@ -10,15 +10,16 @@ function getFolderData(folderName) {
     if (err) console.log(err);
     files.forEach((file) => {
       fs.stat(folderName + "/" + file, (err, currentFile) => {
-        console.log(
-          `${
-            path.parse(file).base.split(".")[0]
-              ? path.parse(file).base.split(".")[0]
-              : file
-          } ${path.parse(file).ext} ${currentFile.size / 1024}kb`
-        );
         if (currentFile.isDirectory()) {
           getFolderData(folderName + "/" + file);
+        } else {
+          console.log(
+            `${
+              path.parse(file).base.split(".")[0]
+                ? path.parse(file).base.split(".")[0]
+                : file
+            } ${path.parse(file).ext} ${currentFile.size / 1024}kb`
+          );
         }
       });
     });

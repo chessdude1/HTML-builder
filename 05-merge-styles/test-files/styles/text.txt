@@ -1,0 +1,9 @@
+#Girls
+{
+    animation: swing ease-in-out 1s infinite alternate;
+    transform-origin: center -20px;
+    transform-box: fill-box;
+    float:left;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
+
+}
